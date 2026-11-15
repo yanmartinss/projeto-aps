@@ -1,5 +1,6 @@
 import { classificacaoSchema } from "../schemas.js";
 import { obterProvedor } from "./provedor.js";
+import { limparEstilo } from "./estilo.js";
 import { SCHEMA_CLASSIFICACAO, SISTEMA_CLASSIFICAR, SISTEMA_RESUMO_TURNO } from "./prompts.js";
 
 /** Classifica um relato. Lança erro se a IA falhar ou devolver algo fora do formato esperado. */
@@ -24,5 +25,5 @@ export async function resumirTurno(ocorrencias: LinhaTurno[]) {
         `- [${o.criadaEm.toISOString()}] (${o.autorPerfil}, urgência ${o.urgencia ?? "não classificada"}, ${o.status}) ${o.texto}`,
     )
     .join("\n");
-  return obterProvedor().gerarTexto(SISTEMA_RESUMO_TURNO, `Ocorrências do período:\n${linhas}`);
+  return limparEstilo(await obterProvedor().gerarTexto(SISTEMA_RESUMO_TURNO, `Ocorrências do período:\n${linhas}`));
 }

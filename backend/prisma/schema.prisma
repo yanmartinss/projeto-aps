@@ -4,19 +4,144 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
-// categoria, urgencia, status e autorPerfil são validados com Zod (SQLite via String)
+// Regimento do condomínio indexado para o assistente (RAG). Só um documento fica ativo por vez.
+model DocumentoRegimento {
+  id              Int               @id @default(autoincrement())
+  nome            String
+  modeloEmbedding String // ex.: "gemini:gemini-embedding-001:768": vetores só se comparam entre o mesmo modelo
+  criadoEm        DateTime          @default(now())
+  trechos         TrechoRegimento[]
+}
+
+model TrechoRegimento {
+  id          Int                @id @default(autoincrement())
+  documentoId Int
+  documento   DocumentoRegimento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  ordem       Int
+  artigo      String? // "Art. 18", quando o trecho começa num artigo
+  texto       String
+  embedding   Bytes? // Float32 normalizado, gerado pelo modelo registrado no documento
+
+  @@index([documentoId])
+}
+
+// Áreas comuns reserváveis. Horários em minutos desde a meia-noite (480 = 8h), no fuso de Brasília.
+model AreaComum {
+  id            Int       @id @default(autoincrement())
+  nome          String    @unique
+  abre          Int
+  fecha         Int
+  duracaoMaxMin Int
+  reservas      Reserva[]
+}
+
+// status: pendente | aprovada | recusada | cancelada (validado com Zod)
+model Reserva {
+  id            Int       @id @default(autoincrement())
+  areaId        Int
+  area          AreaComum @relation(fields: [areaId], references: [id])
+  usuarioId     Int
+  usuario       Usuario   @relation(fields: [usuarioId], references: [id])
+  apartamento   String
+  inicio        DateTime
+  fim           DateTime
+  status        String    @default("pendente")
+  textoOriginal String?
+  motivoRecusa  String?
+  criadaEm      DateTime  @default(now())
+  atualizadaEm  DateTime  @updatedAt
+
+  @@index([areaId, inicio])
+  @@index([apartamento])
+  @@index([usuarioId])
+}
+
+// categoria, urgencia, status e autorPerfil são validados com Zod (guardados como texto; a validação é feita pelo Zod)
 model Ocorrencia {
-  id            Int      @id @default(autoincrement())
+  id            Int                    @id @default(autoincrement())
   texto         String
-  autorPerfil   String   // morador | funcionario
-  categoria     String?  // preenchida pela IA, editável pelo síndico
-  urgencia      String?  // baixa | media | alta
+  autorPerfil   String // morador | funcionario
+  autorId       Int?
+  autor         Usuario?               @relation("Autor", fields: [autorId], references: [id])
+  responsavelId Int?
+  responsavel   Usuario?               @relation("Responsavel", fields: [responsavelId], references: [id])
+  categoria     String? // preenchida pela IA, editável pelo síndico
+  urgencia      String? // baixa | media | alta
   resumo        String?
-  status        String   @default("aberta") // aberta | em_andamento | resolvida
-  classificada  Boolean  @default(false)    // false = IA falhou/não rodou
-  criadaEm      DateTime @default(now())
-  atualizadaEm  DateTime @updatedAt
+  status        String                 @default("aberta") // aberta | em_analise | em_execucao | resolvida
+  resolvidaEm   DateTime? // preenchida ao entrar em "resolvida" e apagada se for reaberta
+  comentarios   ComentarioOcorrencia[]
+  classificada  Boolean                @default(false) // false = IA falhou/não rodou
+  criadaEm      DateTime               @default(now())
+  atualizadaEm  DateTime               @updatedAt
+}
+
+// perfil: morador | funcionario | sindico (validado com Zod). Só o morador tem apartamento.
+model Usuario {
+  id             Int                    @id @default(autoincrement())
+  nome           String
+  email          String                 @unique
+  senhaHash      String
+  perfil         String
+  apartamento    String?
+  ativo          Boolean                @default(true)
+  criadoEm       DateTime               @default(now())
+  // Preenchido quando a pessoa clica em "Esqueci minha senha"; o síndico vê e gera o link.
+  senhaSolicitadaEm DateTime?
+  ocorrencias    Ocorrencia[]           @relation("Autor")
+  delegadas      Ocorrencia[]           @relation("Responsavel")
+  comentarios    ComentarioOcorrencia[]
+  comunicados    Comunicado[]
+  tarefas        Tarefa[]               @relation("TarefaFuncionario")
+  tarefasCriadas Tarefa[]               @relation("TarefaCriadaPor")
+  reservas       Reserva[]
+}
+
+// Conversa de cada ocorrência (síndico, autor e funcionário responsável). Lista simples, sem edição.
+model ComentarioOcorrencia {
+  id           Int        @id @default(autoincrement())
+  ocorrenciaId Int
+  ocorrencia   Ocorrencia @relation(fields: [ocorrenciaId], references: [id], onDelete: Cascade)
+  autorId      Int
+  autor        Usuario    @relation(fields: [autorId], references: [id])
+  texto        String
+  criadoEm     DateTime   @default(now())
+
+  @@index([ocorrenciaId])
+}
+
+// Mural de avisos do síndico. categoria: urgente | convocacao | aviso (validado com Zod).
+model Comunicado {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  texto     String
+  categoria String
+  autorId   Int
+  autor     Usuario  @relation(fields: [autorId], references: [id])
+  criadoEm  DateTime @default(now())
+
+  @@index([criadoEm])
+}
+
+// Atividades que o síndico atribui aos funcionários. status: pendente | em_andamento | concluida; prioridade: baixa | normal | alta.
+model Tarefa {
+  id            Int       @id @default(autoincrement())
+  titulo        String
+  descricao     String?
+  prioridade    String    @default("normal")
+  status        String    @default("pendente")
+  prazo         DateTime?
+  concluidaEm   DateTime?
+  observacao    String? // anotação do funcionário ao atualizar
+  funcionarioId Int
+  funcionario   Usuario   @relation("TarefaFuncionario", fields: [funcionarioId], references: [id])
+  criadaPorId   Int
+  criadaPor     Usuario   @relation("TarefaCriadaPor", fields: [criadaPorId], references: [id])
+  criadaEm      DateTime  @default(now())
+  atualizadaEm  DateTime  @updatedAt
+
+  @@index([funcionarioId, status])
 }

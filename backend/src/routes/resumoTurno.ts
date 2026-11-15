@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import { exigirPerfil } from "../auth/middleware.js";
 import { resumirTurno } from "../ia/servico.js";
 import { resumoTurnoSchema } from "../schemas.js";
 
 export const resumoTurnoRouter = Router();
 
-resumoTurnoRouter.post("/", async (req, res) => {
+resumoTurnoRouter.post("/", exigirPerfil("funcionario", "sindico"), async (req, res) => {
   const { inicio, fim } = resumoTurnoSchema.parse(req.body);
   const ocorrencias = await prisma.ocorrencia.findMany({
-    where: { criadaEm: { gte: inicio, lte: fim } },
+    where: { criadaEm: { gte: inicio, lte: fim }, status: { not: "cancelada" } },
     orderBy: { criadaEm: "asc" },
   });
   if (ocorrencias.length === 0) {

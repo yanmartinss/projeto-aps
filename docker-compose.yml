@@ -1,9 +1,33 @@
-# Ollama local (IA de reserva), rodando na CPU. Uso:
-#   docker compose up -d ollama
+﻿# Serviços locais do projeto. Uso:
+#   docker compose up -d postgres            (banco de dados)
+#   docker compose up -d ollama              (IA de reserva)
 #   docker compose exec ollama ollama pull llama3.2:3b
-# No backend/.env: AI_FALLBACK=ollama  (ou AI_PROVIDER=ollama para usar só o local)
-# Obs.: esta máquina tem GPU AMD, que o Ollama não usa aqui; por isso o modelo é pequeno.
+#
+# No backend/.env:
+#   DATABASE_URL="postgresql://aps:aps_dev_senha@localhost:5433/aps?schema=public"
+#   AI_FALLBACK=ollama
+#
+# A porta do Postgres é 5433 (e não 5432) para não esbarrar em outros Postgres locais.
+# Obs.: esta máquina tem GPU AMD, que o Ollama não usa aqui; por isso o modelo da IA local é pequeno.
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: aps-postgres
+    environment:
+      POSTGRES_USER: aps
+      POSTGRES_PASSWORD: aps_dev_senha # só para desenvolvimento local
+      POSTGRES_DB: aps
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aps -d aps"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   ollama:
     image: ollama/ollama:latest
     container_name: aps-ollama
@@ -14,4 +38,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   ollama_models:
+
