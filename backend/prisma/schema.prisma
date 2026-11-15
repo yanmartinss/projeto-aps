@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// categoria, urgencia, status e autorPerfil são validados com Zod (SQLite via String)
+model Ocorrencia {
+  id            Int      @id @default(autoincrement())
+  texto         String
+  autorPerfil   String   // morador | funcionario
+  categoria     String?  // preenchida pela IA, editável pelo síndico
+  urgencia      String?  // baixa | media | alta
+  resumo        String?
+  status        String   @default("aberta") // aberta | em_andamento | resolvida
+  classificada  Boolean  @default(false)    // false = IA falhou/não rodou
+  criadaEm      DateTime @default(now())
+  atualizadaEm  DateTime @updatedAt
+}
