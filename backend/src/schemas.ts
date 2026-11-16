@@ -189,3 +189,15 @@ export const listarTarefasQuerySchema = z.object({
   status: z.enum(STATUS_TAREFA).optional(),
   funcionarioId: z.coerce.number().int().positive().optional(),
 });
+
+// ---------- encomendas ----------
+export const STATUS_ENCOMENDA = ["aguardando", "retirada"] as const;
+
+export const criarEncomendaSchema = z.object({
+  apartamento: z.string().trim().min(1, "Informe o apartamento").max(20),
+  descricao: z.string().trim().max(200).optional(),
+});
+
+export const listarEncomendasQuerySchema = z.object({
+  status: z.enum(STATUS_ENCOMENDA).optional(),
+});

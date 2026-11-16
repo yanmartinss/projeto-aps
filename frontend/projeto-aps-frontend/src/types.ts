@@ -207,3 +207,17 @@ export interface Aviso {
   quantidade: number
   texto: string
 }
+
+export type StatusEncomenda = 'aguardando' | 'retirada'
+
+export interface Encomenda {
+  id: number
+  apartamento: string
+  descricao: string | null
+  status: StatusEncomenda
+  recebidaEm: string
+  retiradaEm: string | null
+  registradaPor: { id: number; nome: string }
+  /** Só vem na resposta de quem registra: quantos moradores cadastrados há nesse apartamento. */
+  moradoresNoApartamento?: number
+}

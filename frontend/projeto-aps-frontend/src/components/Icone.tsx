@@ -80,6 +80,12 @@ const DESENHOS: Record<string, ReactNode> = {
       <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" />
     </>
   ),
+  pacote: (
+    <>
+      <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
+      <path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" />
+    </>
+  ),
   tarefas: (
     <>
       <rect x="4" y="4" width="16" height="16" rx="3" />

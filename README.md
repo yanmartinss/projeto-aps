@@ -53,3 +53,5 @@ Entre com o e-mail e a senha do síndico que você colocou no `.env`. Para testa
 - O assistente do regimento usa embeddings do Gemini. Se a cota grátis acabar, o sistema indexa e busca com o Ollama (`docker exec aps-ollama ollama pull bge-m3`, uma vez). O índice guarda qual modelo usou e as perguntas usam o mesmo. Trocar o provedor principal no `.env` exige "Reindexar" na tela do síndico.
 
 **Reservas:** a reserva é do dia inteiro (8h às 22h), só a partir do dia seguinte e até 3 meses à frente. O morador escolhe a área e a data (dd/mm/aaaa); não há escolha de horário.
+
+**Encomendas:** a portaria (funcionário ou síndico) registra a encomenda que chegou com o número do apartamento. O morador desse apartamento vê o aviso no sino e no Início, e a tela Encomendas lista o que está esperando e o que já foi retirado. A portaria marca como retirada quando o morador busca.

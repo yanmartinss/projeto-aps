@@ -950,3 +950,16 @@ select:focus-visible {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* encomendas: formulário da portaria */
+.grade-encomenda {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 559px) {
+  .grade-encomenda {
+    grid-template-columns: 1fr;
+  }
+}

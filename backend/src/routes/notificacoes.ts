@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import { normalizarApartamento } from "../reservas/regras.js";
 import { STATUS_ENCERRADOS } from "../schemas.js";
 import { usuarioDaRequisicao } from "../auth/middleware.js";
 
@@ -44,10 +45,12 @@ notificacoesRouter.get("/", async (req, res) => {
     add("minhas", delegadas, `${plural(delegadas, "ocorrência delegada", "ocorrências delegadas")} a você`);
   } else {
     const tresDias = new Date(agora.getTime() - 3 * 86_400_000);
-    const [decididas, resolvidas] = await Promise.all([
+    const [decididas, resolvidas, encomendas] = await Promise.all([
       prisma.reserva.count({ where: { usuarioId: eu.id, status: { in: ["aprovada", "recusada"] }, atualizadaEm: { gte: tresDias } } }),
       prisma.ocorrencia.count({ where: { autorId: eu.id, status: "resolvida", resolvidaEm: { gte: tresDias } } }),
+      eu.apartamento ? prisma.encomenda.count({ where: { apartamentoChave: normalizarApartamento(eu.apartamento), status: "aguardando" } }) : 0,
     ]);
+    add("encomendas", encomendas, `${plural(encomendas, "encomenda aguarda", "encomendas aguardam")} retirada na portaria`);
     add("reservas", decididas, `${plural(decididas, "reserva foi respondida", "reservas foram respondidas")} pelo síndico`);
     add("minhas", resolvidas, `${plural(resolvidas, "ocorrência foi resolvida", "ocorrências foram resolvidas")}`);
   }

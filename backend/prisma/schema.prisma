@@ -98,6 +98,7 @@ model Usuario {
   tarefas        Tarefa[]               @relation("TarefaFuncionario")
   tarefasCriadas Tarefa[]               @relation("TarefaCriadaPor")
   reservas       Reserva[]
+  encomendasRegistradas Encomenda[] @relation("EncomendaRegistradaPor")
 }
 
 // Conversa de cada ocorrência (síndico, autor e funcionário responsável). Lista simples, sem edição.
@@ -144,4 +145,20 @@ model Tarefa {
   atualizadaEm  DateTime  @updatedAt
 
   @@index([funcionarioId, status])
+}
+
+// Encomenda que chegou na portaria para um apartamento. O morador do apartamento vê e recebe o aviso no sino.
+model Encomenda {
+  id               Int      @id @default(autoincrement())
+  apartamento      String // como o funcionário digitou (ex.: "304 B")
+  apartamentoChave String // sem espaços e em minúsculas ("304b"), para achar o morador certo
+  descricao        String? // ex.: "Caixa média da Shopee"
+  status           String   @default("aguardando") // aguardando | retirada
+  recebidaEm       DateTime @default(now())
+  retiradaEm       DateTime?
+  registradaPorId  Int
+  registradaPor    Usuario  @relation("EncomendaRegistradaPor", fields: [registradaPorId], references: [id])
+
+  @@index([apartamentoChave, status])
+  @@index([status, recebidaEm])
 }

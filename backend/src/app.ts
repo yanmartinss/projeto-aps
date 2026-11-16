@@ -7,6 +7,7 @@ import { authRouter } from "./routes/auth.js";
 import { buscaRouter } from "./routes/busca.js";
 import { comunicadosRouter } from "./routes/comunicados.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { encomendasRouter } from "./routes/encomendas.js";
 import { notificacoesRouter } from "./routes/notificacoes.js";
 import { tarefasRouter } from "./routes/tarefas.js";
 import { ocorrenciasRouter } from "./routes/ocorrencias.js";
@@ -33,6 +34,7 @@ app.use("/comunicados", autenticar, comunicadosRouter);
 app.use("/busca", autenticar, buscaRouter);
 app.use("/tarefas", autenticar, tarefasRouter);
 app.use("/notificacoes", autenticar, notificacoesRouter);
+app.use("/encomendas", autenticar, encomendasRouter);
 
 const tratarErros: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {

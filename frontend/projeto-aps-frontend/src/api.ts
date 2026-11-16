@@ -4,6 +4,7 @@ import type {
   CategoriaComunicado,
   Comentario,
   Comunicado,
+  Encomenda,
   DashboardDados,
   Indicadores,
   Ocorrencia,
@@ -13,6 +14,7 @@ import type {
   ResultadoBusca,
   ResumoDoDia,
   Status,
+  StatusEncomenda,
   StatusReserva,
   StatusTarefa,
   PrioridadeTarefa,
@@ -319,4 +321,20 @@ export async function servidorNoAr(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+export const apiEncomendas = {
+  /** O servidor já filtra: morador recebe só as do apartamento dele; a portaria recebe todas. */
+  listar(status?: StatusEncomenda) {
+    return pedir<Encomenda[]>(`/encomendas${status ? `?status=${status}` : ''}`)
+  },
+  criar(dados: { apartamento: string; descricao?: string }) {
+    return pedir<Encomenda>('/encomendas', { method: 'POST', body: JSON.stringify(dados) })
+  },
+  retirar(id: number) {
+    return pedir<Encomenda>(`/encomendas/${id}/retirar`, { method: 'PATCH' })
+  },
+  apagar(id: number) {
+    return pedir<Record<string, never>>(`/encomendas/${id}`, { method: 'DELETE' })
+  },
 }

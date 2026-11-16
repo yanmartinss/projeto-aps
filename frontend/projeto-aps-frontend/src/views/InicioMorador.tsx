@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { api, apiComunicados, apiReservas } from '../api'
+import { api, apiComunicados, apiEncomendas, apiReservas } from '../api'
 import { Icone, type NomeIcone } from '../components/Icone'
 import { CartaoComunicado } from './Comunicados'
 import { haQuanto, periodoReserva } from '../format'
-import { STATUS, STATUS_RESERVA, type Comunicado, type OcorrenciaCompleta, type Reserva } from '../types'
+import { STATUS, STATUS_RESERVA, type Comunicado, type Encomenda, type OcorrenciaCompleta, type Reserva } from '../types'
 
 interface Props {
   nome: string
@@ -21,6 +21,7 @@ export function InicioMorador({ nome, apartamento, aoIr }: Props) {
   const [comunicados, setComunicados] = useState<Comunicado[] | null>(null)
   const [minhas, setMinhas] = useState<OcorrenciaCompleta[] | null>(null)
   const [reservas, setReservas] = useState<Reserva[] | null>(null)
+  const [encomendas, setEncomendas] = useState<Encomenda[]>([])
   const [agora] = useState(() => Date.now()) // fixo durante a visita: render puro
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function InicioMorador({ nome, apartamento, aoIr }: Props) {
     apiComunicados.listar().then((l) => !cancelado && setComunicados(l)).catch(() => !cancelado && setComunicados([]))
     api.minhas().then((l) => !cancelado && setMinhas(l)).catch(() => !cancelado && setMinhas([]))
     apiReservas.listar().then((l) => !cancelado && setReservas(l)).catch(() => !cancelado && setReservas([]))
+    apiEncomendas.listar('aguardando').then((l) => !cancelado && setEncomendas(l)).catch(() => {})
     return () => {
       cancelado = true
     }
@@ -46,6 +48,15 @@ export function InicioMorador({ nome, apartamento, aoIr }: Props) {
       <p className="lead">
         Apartamento {apartamento}. Chamados, reservas e avisos do síndico ficam aqui.
       </p>
+
+      {encomendas.length > 0 && (
+        <p className="aviso-pendentes" role="status">
+          <strong>{encomendas.length === 1 ? 'Chegou 1 encomenda' : `Chegaram ${encomendas.length} encomendas`} para o seu apartamento.</strong>
+          <button type="button" className="link" onClick={() => aoIr('encomendas')}>
+            Ver na portaria
+          </button>
+        </p>
+      )}
 
       <div className="acoes-rapidas">
         {ACOES.map((a) => (

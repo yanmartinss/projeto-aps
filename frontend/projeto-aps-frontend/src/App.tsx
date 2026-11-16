@@ -6,6 +6,8 @@ import { Assistente } from './views/Assistente'
 import { Comunicados } from './views/Comunicados'
 import { Dashboard } from './views/Dashboard'
 import { CONDOMINIO } from './condominio'
+import { EncomendasFuncionario } from './views/EncomendasFuncionario'
+import { EncomendasMorador } from './views/EncomendasMorador'
 import { Entrar } from './views/Entrar'
 import { InicioMorador } from './views/InicioMorador'
 import { MinhasOcorrencias } from './views/MinhasOcorrencias'
@@ -38,10 +40,12 @@ const MENUS: Record<Perfil, ItemMenu[]> = {
     { id: 'registrar', rotulo: 'Registrar ocorrência', icone: 'mais' },
     { id: 'minhas', rotulo: 'Minhas ocorrências', icone: 'lista' },
     { id: 'reservas', rotulo: 'Reservas', icone: 'calendario' },
+    { id: 'encomendas', rotulo: 'Encomendas', icone: 'pacote' },
     { id: 'assistente', rotulo: 'Assistente', icone: 'conversa' },
   ],
   funcionario: [
     { id: 'tarefas', rotulo: 'Minhas atividades', icone: 'tarefas', grupo: 'Operação' },
+    { id: 'encomendas', rotulo: 'Encomendas', icone: 'pacote', grupo: 'Operação' },
     { id: 'registrar', rotulo: 'Registrar ocorrência', icone: 'mais', grupo: 'Operação' },
     { id: 'minhas', rotulo: 'Minhas ocorrências', icone: 'lista', grupo: 'Operação' },
     { id: 'comunicados', rotulo: 'Comunicados', icone: 'comunicado', grupo: 'Operação' },
@@ -155,6 +159,7 @@ export default function App() {
       {telaAtual === 'minhas' && <MinhasOcorrencias meuId={usuario.id} abrirRegistrar={() => irPara('registrar')} />}
       {telaAtual === 'reservas' && (souSindico ? <ReservasSindico /> : <ReservasMorador apartamento={usuario.apartamento ?? ''} />)}
       {telaAtual === 'tarefas' && (souSindico ? <TarefasSindico /> : <MinhasTarefas />)}
+      {telaAtual === 'encomendas' && (usuario.perfil === 'morador' ? <EncomendasMorador apartamento={usuario.apartamento ?? ''} /> : <EncomendasFuncionario meuId={usuario.id} />)}
       {telaAtual === 'comunicados' && <Comunicados souSindico={souSindico} />}
       {telaAtual === 'turno' && <ResumoTurno />}
       {telaAtual === 'regimento' && <Regimento />}
